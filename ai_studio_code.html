@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNA Chile - Sistema de Pre-declaración Jurada</title>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sna-blue: #003399;
+            --sna-dark: #002366;
+            --sna-red: #ed1c24;
+            --cu-blue: #0071bc;
+            --sag-green: #1b5e20;
+            --warning-gold: #ffc107;
+            --gray-100: #f8f9fa;
+            --gray-300: #dee2e6;
+            --gray-700: #495057;
+            --radius: 6px;
+            --shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Public Sans', sans-serif;
+            background-color: #f0f2f5;
+            color: var(--gray-700);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- ARQUITECTURA DE NAVEGACIÓN --- */
+        .screen { display: none; min-height: 100vh; padding-bottom: 3rem; }
+        .screen.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- COMPONENTES GLOBALES --- */
+        header {
+            background: var(--sna-blue);
+            color: white;
+            padding: 1rem;
+            border-bottom: 5px solid var(--sna-red);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-content { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        
+        .container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+        
+        .card { background: white; border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); border: 1px solid var(--gray-300); margin-bottom: 1.5rem; }
+
+        .btn {
+            padding: 0.9rem 1.5rem; border-radius: var(--radius); font-weight: 700; border: none; cursor: pointer;
+            transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            text-transform: uppercase; font-size: 0.9rem; width: 100%; text-decoration: none;
+        }
+        .btn-primary { background: var(--sna-blue); color: white; }
+        .btn-primary:hover { background: var(--sna-dark); }
+        .btn-outline { background: transparent; border: 2px solid var(--sna-blue); color: var(--sna-blue); }
+        .btn-cu { background: var(--cu-blue); color: white; }
+
+        /* --- FORMULARIOS --- */
+        .legal-banner {
+            background: #f8d7da; border: 2px solid var(--sna-red); color: #721c24;
+            padding: 1.2rem; border-radius: var(--radius); margin-bottom: 1.5rem;
+            font-weight: 700; font-size: 0.9rem;
+        }
+        .form-title { color: var(--sna-blue); font-weight: 800; border-bottom: 2px solid var(--gray-300); padding-bottom: 0.5rem; margin-bottom: 1.5rem; text-transform: uppercase; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin-bottom: 1.2rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        label { font-weight: 700; font-size: 0.85rem; color: var(--sna-dark); }
+        .form-control { padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 1rem; }
+        
+        fieldset { border: 1px solid var(--gray-300); padding: 1.5rem; border-radius: var(--radius); margin-bottom: 1.5rem; background: #fafafa; }
+        legend { font-weight: 800; padding: 0 0.5rem; color: var(--sna-blue); font-size: 0.85rem; text-transform: uppercase; }
+
+        .hidden { display: none !important; }
+        .conditional-box { background: #eef2f7; padding: 1rem; border-radius: var(--radius); margin-top: 10px; border-left: 4px solid var(--sna-blue); }
+
+        /* --- PANTALLA 1: LOGIN --- */
+        .login-split { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        @media (max-width: 768px) { .login-split { grid-template-columns: 1fr; } }
+        
+        /* --- PANTALLA 2: SELECCIÓN --- */
+        .selection-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .opt-card { 
+            border: 2px solid var(--gray-300); padding: 2rem; border-radius: 8px; text-align: center; 
+            cursor: pointer; transition: 0.3s; background: white;
+        }
+        .opt-card:hover { border-color: var(--sna-blue); transform: translateY(-5px); box-shadow: var(--shadow); }
+        .opt-card i { font-size: 3rem; display: block; margin-bottom: 1rem; }
+
+        /* --- TABLA DINÁMICA --- */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+        table th { background: var(--sna-blue); color: white; padding: 8px; text-align: left; }
+        table td { border: 1px solid var(--gray-300); padding: 8px; background: white; }
+
+        /* --- LOADER --- */
+        #loader {
+            position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9);
+            display:none; flex-direction:column; align-items:center; justify-content:center; z-index: 1000;
+        }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--sna-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- LOADER -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <p id="loader-text" style="margin-top:1rem; font-weight:700; color:var(--sna-blue);">Procesando...</p>
+    </div>
+
+    <header>
+        <div class="header-content">
+            <div style="font-weight: 800; letter-spacing: 1px; display:flex; align-items:center; gap:10px;">
+                <span style="background:white; color:var(--sna-blue); padding:2px 8px; border-radius:4px;">SNA</span>
+                ADUANAS DE CHILE
+            </div>
+            <div id="user-tag" class="hidden" style="font-size: 0.75rem; background: rgba(0,0,0,0.2); padding: 5px 12px; border-radius: 20px;"></div>
+        </div>
+    </header>
+
+    <!-- 1. PANTALLA INICIO: AUTENTICACIÓN -->
+    <section id="screen-login" class="screen active">
+        <div class="container">
+            <div class="text-center" style="margin-bottom: 2rem; text-align:center;">
+                <h1 style="color: var(--sna-dark); font-size: 2rem;">Pre-declaración Digital</h1>
+                <p>Bienvenido al sistema oficial de ingreso al territorio nacional.</p>
+            </div>
+
+            <div class="login-split">
+                <!-- Chilenos -->
+                <div class="card" style="border-top: 5px solid var(--cu-blue);">
+                    <h3 style="margin-bottom:1rem;">Chilenos y Residentes</h3>
+                    <p style="font-size:0.85rem; color:#666; margin-bottom:1.5rem;">Utilice su identidad digital del Estado para un ingreso automático.</p>
+                    <button onclick="handleLogin('ClaveÚnica')" class="btn btn-cu">
+                        <img src="https://logodownload.org/wp-content/uploads/2021/03/clave-unica-logo.png" alt="" style="height:20px; filter:brightness(0) invert(1);">
+                        Ingresar con ClaveÚnica
+                    </button>
+                </div>
+
+                <!-- Extranjeros -->
+                <div class="card" style="border-top: 5px solid var(--sna-blue);">
+                    <h3 style="margin-bottom:1rem;">Extranjeros / Turistas</h3>
+                    <form id="form-login-foreign" onsubmit="validateForeignLogin(event)">
+                        <div class="form-group" style="margin-bottom:1rem;">
+                            <label>Pasaporte / ID País de Origen</label>
+                            <input type="text" id="login-doc" class="form-control" placeholder="Ej: A1234567" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:1rem;">
+                            <label>Correo Electrónico</label>
+                            <input type="email" id="login-email" class="form-control" placeholder="usuario@correo.com" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Ingresar como Visitante</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. PANTALLA INTERMEDIA: SELECCIÓN -->
+    <section id="screen-selection" class="screen">
+        <div class="container">
+            <div style="text-align:center; margin-bottom:3rem;">
+                <h2>Selección Jurídica de Trámite</h2>
+                <p>Indique el tipo de declaración que desea someter a fiscalización.</p>
+            </div>
+            <div class="selection-cards">
+                <div class="opt-card" onclick="navigateTo('screen-form-passenger')">
+                    <span>🧳</span>
+                    <h3>Pasajeros / Equipaje</h3>
+                    <p style="font-size:0.85rem;">Declaración individual o de grupo familiar (Módulo A).</p>
+                </div>
+                <div class="opt-card" onclick="navigateTo('screen-form-cargo')">
+                    <span>🚛</span>
+                    <h3>Carga y Transportistas</h3>
+                    <p style="font-size:0.85rem;">Ingreso de mercancías comerciales y vehículos de carga (MIC/DTA).</p>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:2rem;">
+                <button onclick="navigateTo('screen-login')" class="btn btn-outline" style="width:auto;">← Volver</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. FORMULARIO PERSONAS -->
+    <section id="screen-form-passenger" class="screen">
+        <div class="container">
+            <div class="legal-banner">
+                ⚠️ DECLARACIÓN JURADA: La falsificación, ocultamiento o omisión de información constituye un delito sancionado por la Ordenanza de Aduanas y el Código Penal de Chile.
+            </div>
+            
+            <div class="card">
+                <h2 class="form-title">Módulo A: Pasajeros y Equipaje</h2>
+                <form id="f-passenger" onsubmit="submitDeclaration(event, 'Pasajero')">
+                    
+                    <fieldset>
+                        <legend>I. Identificación del Declarante</legend>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Nombre Completo</label><input type="text" class="form-control" required></div>
+                            <div class="form-group">
+                                <label>Motivo del Viaje</label>
+                                <select class="form-control" required>
+                                    <option value="">Seleccione...</option>
+                                    <option>Turismo</option><option>Negocios</option><option>Mudanza</option><option>Tránsito</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>¿Viaja con menores de edad?</label>
+                                <select class="form-control" onchange="toggleMinor(this.value)">
+                                    <option value="no">No</option><option value="si">Sí</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="minor-details" class="conditional-box hidden">
+                            <h4 style="font-size:0.8rem; margin-bottom:0.5rem;">DATOS DEL MENOR</h4>
+                            <div class="form-grid">
+                                <input type="text" class="form-control" placeholder="Nombre Menor">
+                                <input type="text" class="form-control" placeholder="Folio Autorización PDI / Notarial">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>II. Equipaje y Mercancías</legend>
+                        <label style="display:flex; gap:10px; margin-bottom:1rem; cursor:pointer;">
+                            <input type="checkbox" onchange="toggleTable(this.checked)"> ¿Porta mercancías que excedan la franquicia (US$ 500) o para comercio?
+                        </label>
+                        <div id="goods-table-box" class="hidden">
+                            <table id="goods-table">
+                                <thead><tr><th>Descripción</th><th>Cant.</th><th>Valor USD</th></tr></thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="text" class="form-control"></td>
+                                        <td><input type="number" class="form-control"></td>
+                                        <td><input type="number" class="form-control"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button type="button" onclick="addRow()" style="margin-top:5px; font-size:0.7rem;">+ Agregar fila</button>
+                        </div>
+                        <div style="margin-top:1.5rem;">
+                            <label>¿Porta moneda extranjera o instrumentos financieros >= US$ 10.000?</label>
+                            <div style="display:flex; gap:1rem; margin-top:0.5rem;">
+                                <label><input type="radio" name="cash" value="si" onclick="toggleCash(true)"> Sí</label>
+                                <label><input type="radio" name="cash" value="no" onclick="toggleCash(false)" checked> No</label>
+                            </div>
+                            <div id="cash-box" class="conditional-box hidden">
+                                <input type="number" class="form-control" placeholder="Monto exacto y origen de fondos">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset style="border-color:var(--sag-green);">
+                        <legend style="color:var(--sag-green);">III. Declaración Jurada SAG (Sanitaria)</legend>
+                        <p style="font-size:0.8rem; margin-bottom:1rem;">¿Trae consigo productos de origen animal, vegetal o mascotas?</p>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.85rem;">
+                            <label><input type="checkbox"> Frutas/Verduras frescas</label>
+                            <label><input type="checkbox"> Semillas/Granos</label>
+                            <label><input type="checkbox"> Carnes/Embutidos</label>
+                            <label><input type="checkbox" id="check-pet" onchange="togglePet(this.checked)"> Mascotas (Animales vivos)</label>
+                        </div>
+                        <div id="pet-box" class="conditional-box hidden" style="border-left-color:var(--sag-green);">
+                            <label>Certificado Sanitario Oficial N°:</label>
+                            <input type="text" class="form-control" placeholder="Folio del certificado">
+                        </div>
+                    </fieldset>
+
+                    <div style="margin:2rem 0; padding:1.5rem; background:#eee; border-radius:8px;">
+                        <label style="display:flex; gap:12px; font-weight:800; cursor:pointer;">
+                            <input type="checkbox" required style="width:20px; height:20px;">
+                            Declaro bajo juramento que los datos contenidos en este documento son la expresión fiel de la verdad, asumiendo responsabilidad legal y penal en caso de falsedad.
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Transmitir Declaración</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. FORMULARIO CARGA -->
+    <section id="screen-form-cargo" class="screen">
+        <div class="container">
+            <div class="legal-banner">
+                ⚠️ AVISO PARA TRANSPORTISTAS: El incumplimiento de los plazos de admisión o el transporte de mercancías no declaradas resultará en retención inmediata.
+            </div>
+            <div class="card">
+                <h2 class="form-title">Manifiesto Internacional de Carga</h2>
+                <form id="f-cargo" onsubmit="submitDeclaration(event, 'Transportista')">
+                    
+                    <fieldset>
+                        <legend>I. Identificación Conductor y Unidad</legend>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Nombre del Chofer</label><input type="text" class="form-control" required></div>
+                            <div class="form-group"><label>N° Licencia Profesional</label><input type="text" class="form-control" required></div>
+                            <div class="form-group">
+                                <label>Tipo de Admisión</label>
+                                <select class="form-control"><option>General (180 días)</option><option>Diplomática (90 días)</option></select>
+                            </div>
+                        </div>
+                        <div class="form-grid" style="margin-top:10px;">
+                            <div class="form-group"><label>Patente Tracto</label><input type="text" class="form-control" placeholder="ABCD-12" required></div>
+                            <div class="form-group"><label>Patente Remolque/Batea</label><input type="text" class="form-control" required></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>II. Manifiesto MIC/DTA</legend>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Número MIC/DTA</label><input type="text" class="form-control" required placeholder="YYYY-CH-XXXX"></div>
+                            <div class="form-group"><label>Peso Bruto (KG)</label><input type="number" class="form-control" required></div>
+                            <div class="form-group"><label>Sellos / Precintos de Origen</label><input type="text" class="form-control" required></div>
+                        </div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>Descripción Exhaustiva de Mercancía</label>
+                            <textarea class="form-control" rows="3" required></textarea>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>III. Documentación Adjunta (Simulada)</legend>
+                        <div class="form-grid">
+                            <div class="form-group"><label>CRT (Carta de Porte)</label><input type="file" required></div>
+                            <div class="form-group"><label>Factura Comercial</label><input type="file" required></div>
+                        </div>
+                    </fieldset>
+
+                    <div style="margin:2rem 0; padding:1.5rem; background:#eee; border-radius:8px;">
+                        <label style="display:flex; gap:12px; font-weight:800; cursor:pointer;">
+                            <input type="checkbox" required style="width:20px; height:20px;">
+                            Certifico que la carga declarada coincide estrictamente con los documentos de transporte adjuntos.
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Registrar MIC/DTA</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. PANTALLA ÉXITO: QR -->
+    <section id="screen-qr" class="screen">
+        <div class="container text-center" style="text-align:center;">
+            <div class="card">
+                <h2 style="color:var(--sag-green); margin-bottom:1rem;">✅ Registro Exitoso</h2>
+                <p>Su declaración ha sido validada por el sistema central de Aduanas.</p>
+                <div style="border: 2px solid var(--sna-blue); display:inline-block; padding:1rem; margin:2rem 0; background:white;">
+                    <img id="qr-image" src="" alt="Código QR">
+                    <p id="qr-id" style="font-family:monospace; font-weight:bold; margin-top:10px;"></p>
+                    <p style="font-size:0.7rem; color:blue;">ESTADO: VALIDADO - VIGENCIA 48H</p>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <button onclick="resetAndNew()" class="btn btn-outline">🔄 Otra declaración</button>
+                    <button onclick="navigateTo('screen-exit')" class="btn btn-primary">🚪 Finalizar y Salir</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. PANTALLA SALIDA -->
+    <section id="screen-exit" class="screen">
+        <div class="container" style="text-align:center;">
+            <div class="card">
+                <div style="font-size:4rem; margin-bottom:1rem;">🇨🇱</div>
+                <h2 style="color:var(--sna-blue);">¡Buen viaje y bienvenido!</h2>
+                <p style="margin-bottom:2rem;">El Servicio Nacional de Aduanas agradece su cumplimiento de las normas de ingreso.</p>
+                
+                <div style="text-align:left; background:#f8f9fa; padding:1.5rem; border-radius:8px; margin-bottom:2rem;">
+                    <h4 style="margin-bottom:10px;">Recordatorios Importantes:</h4>
+                    <ul style="font-size:0.9rem; padding-left:1.2rem;">
+                        <li>Mantenga una captura de pantalla del código QR.</li>
+                        <li>Tenga sus documentos de identidad y facturas a mano.</li>
+                        <li>La conexión a internet en pasos fronterizos puede ser inestable.</li>
+                    </ul>
+                </div>
+                
+                <button onclick="location.reload()" class="btn btn-primary">Volver al Inicio del Sistema</button>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // --- NAVEGACIÓN CORE ---
+        function navigateTo(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // --- LÓGICA LOGIN ---
+        function handleLogin(type) {
+            const loader = document.getElementById('loader');
+            document.getElementById('loader-text').innerText = "Autenticando con " + type + "...";
+            loader.style.display = 'flex';
+            
+            setTimeout(() => {
+                loader.style.display = 'none';
+                const userTag = document.getElementById('user-tag');
+                userTag.innerText = "SESIÓN: " + type;
+                userTag.classList.remove('hidden');
+                navigateTo('screen-selection');
+            }, 1200);
+        }
+
+        function validateForeignLogin(e) {
+            e.preventDefault();
+            const doc = document.getElementById('login-doc').value;
+            if(doc.length < 5) { alert("Documento inválido"); return; }
+            handleLogin("Pasaporte: " + doc);
+        }
+
+        // --- DINÁMICA FORMULARIOS ---
+        function toggleMinor(val) {
+            document.getElementById('minor-details').classList.toggle('hidden', val !== 'si');
+        }
+
+        function toggleTable(show) {
+            document.getElementById('goods-table-box').classList.toggle('hidden', !show);
+        }
+
+        function addRow() {
+            const table = document.getElementById('goods-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = '<td><input type="text" class="form-control"></td><td><input type="number" class="form-control"></td><td><input type="number" class="form-control"></td>';
+        }
+
+        function toggleCash(show) {
+            document.getElementById('cash-box').classList.toggle('hidden', !show);
+        }
+
+        function togglePet(show) {
+            document.getElementById('pet-box').classList.toggle('hidden', !show);
+        }
+
+        // --- PROCESAMIENTO FINAL ---
+        function submitDeclaration(e, role) {
+            e.preventDefault();
+            const loader = document.getElementById('loader');
+            document.getElementById('loader-text').innerText = "Transmitiendo datos a Aduanas...";
+            loader.style.display = 'flex';
+
+            setTimeout(() => {
+                loader.style.display = 'none';
+                const txId = "TX-" + Math.floor(Math.random() * 900000 + 100000);
+                document.getElementById('qr-id').innerText = txId;
+                document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=SNA-CHILE-${role}-${txId}`;
+                navigateTo('screen-qr');
+            }, 2000);
+        }
+
+        function resetAndNew() {
+            document.getElementById('f-passenger').reset();
+            document.getElementById('f-cargo').reset();
+            document.getElementById('minor-details').classList.add('hidden');
+            document.getElementById('goods-table-box').classList.add('hidden');
+            document.getElementById('cash-box').classList.add('hidden');
+            document.getElementById('pet-box').classList.add('hidden');
+            navigateTo('screen-selection');
+        }
+    </script>
+</body>
+</html>
