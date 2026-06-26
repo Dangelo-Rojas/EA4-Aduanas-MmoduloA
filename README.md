@@ -38,10 +38,11 @@ Siguiendo los criterios de calidad e iteración solicitados en la pauta de evalu
 | **v1.2.0** | Segmentación intermedia: Personas vs Carga Comercial. | Escalabilidad del sistema para atender tanto a particulares como a choferes de camiones. |
 | **v1.3.0** | Formulación con Rigor Legal Exhaustivo (SNA/SAG/PDI). | Inclusión de banners de advertencia penal por perjurio, tablas de mercancía >US$500 y campos de minoría de edad con folios notariales. |
 | **v1.4.0** | Lógica de salida post-QR y redirección institucional. | Permite la atención en bucle ("Realizar otro trámite") o salida segura a una página neutra informativa. |
+| **v1.5.0** | Iteración de calidad post-pruebas (matriz de mejora EA4). | 4 cambios aplicados: unificación de vigencia 48h→72h (H-05), validación numérica no negativa en formularios (H-07), aria-labels y roles ARIA para accesibilidad (H-08), y confirmación previa al envío para prevenir errores (H-04). |
 
 ---
 
 ## 🚀 4. Cómo Ejecutar el Prototipo
-1. Descarga el archivo `index.html` de este repositorio.
+1. Descarga el archivo `ai_studio_code.html` de este repositorio.
 2. Haz doble clic sobre el archivo para abrirlo en cualquier navegador web moderno (Chrome, Edge, Firefox, Safari).
 3. No requiere instalaciones de servidores locales ni dependencias externas (Cumple con los atributos de portabilidad y eficiencia de desempeño de la norma ISO 25010).
