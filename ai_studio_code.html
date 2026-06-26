@@ -172,19 +172,19 @@
                 <p>Indique el tipo de declaración que desea someter a fiscalización.</p>
             </div>
             <div class="selection-cards">
-                <div class="opt-card" onclick="navigateTo('screen-form-passenger')">
+                <div class="opt-card" onclick="navigateTo('screen-form-passenger')" role="button" tabindex="0" aria-label="Declarar como pasajero o equipaje, modulo A">
                     <span>🧳</span>
                     <h3>Pasajeros / Equipaje</h3>
                     <p style="font-size:0.85rem;">Declaración individual o de grupo familiar (Módulo A).</p>
                 </div>
-                <div class="opt-card" onclick="navigateTo('screen-form-cargo')">
+                <div class="opt-card" onclick="navigateTo('screen-form-cargo')" role="button" tabindex="0" aria-label="Declarar como transportista de carga comercial, MIC DTA">
                     <span>🚛</span>
                     <h3>Carga y Transportistas</h3>
                     <p style="font-size:0.85rem;">Ingreso de mercancías comerciales y vehículos de carga (MIC/DTA).</p>
                 </div>
             </div>
             <div style="text-align:center; margin-top:2rem;">
-                <button onclick="navigateTo('screen-login')" class="btn btn-outline" style="width:auto;">← Volver</button>
+                <button onclick="navigateTo('screen-login')" class="btn btn-outline" style="width:auto;" aria-label="Volver a la pantalla de inicio">← Volver</button>
             </div>
         </div>
     </section>
@@ -355,8 +355,8 @@
                     <p style="font-size:0.7rem; color:blue;">ESTADO: VALIDADO - VIGENCIA 72H</p>
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                    <button onclick="resetAndNew()" class="btn btn-outline">🔄 Otra declaración</button>
-                    <button onclick="navigateTo('screen-exit')" class="btn btn-primary">🚪 Finalizar y Salir</button>
+                    <button onclick="resetAndNew()" class="btn btn-outline" aria-label="Realizar otra declaracion desde el inicio">🔄 Otra declaración</button>
+                    <button onclick="navigateTo('screen-exit')" class="btn btn-primary" aria-label="Finalizar tramite y salir del sistema">🚪 Finalizar y Salir</button>
                 </div>
             </div>
         </div>
